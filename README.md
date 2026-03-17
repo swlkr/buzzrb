@@ -4,6 +4,8 @@ Ruby client for the [Beeswax/Freewheel Advertiser API v2](https://docs.freewheel
 
 ## Installation
 
+Requires Ruby 3.0+.
+
 Add to your Gemfile:
 
 ```ruby
@@ -114,6 +116,7 @@ end
 | `account_id` | `nil` | Scope authentication to a specific account |
 | `timezone` | `nil` | Sent as `X-Timezone` header |
 | `keep_logged_in` | `true` | Call keep-logged-in after authenticating |
+| `base_url` | `https://{buzz_key}.api.beeswax.com` | Override the API base URL |
 | `open_timeout` | `10` | Connection open timeout in seconds |
 | `read_timeout` | `30` | Read timeout in seconds |
 
