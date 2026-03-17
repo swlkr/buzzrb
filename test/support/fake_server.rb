@@ -1,0 +1,196 @@
+# frozen_string_literal: true
+
+require "webrick"
+require "json"
+
+class AllMethodsServlet < WEBrick::HTTPServlet::AbstractServlet
+  def initialize(server, &block)
+    super(server)
+    @block = block
+  end
+
+  %w[GET POST PUT DELETE PATCH].each do |method|
+    define_method("do_#{method}") do |req, res|
+      @block.call(req, res)
+    end
+  end
+
+  def self.create(block)
+    Class.new(self) do
+      define_method(:initialize) do |server, *args|
+        super(server)
+        @block = block
+      end
+    end
+  end
+end
+
+class FakeServer
+  attr_reader :port, :requests
+
+  def initialize
+    @port = find_available_port
+    @requests = []
+    @authenticated = false
+    @server = nil
+  end
+
+  def start
+    @server = WEBrick::HTTPServer.new(
+      Port: @port,
+      Logger: WEBrick::Log.new("/dev/null"),
+      AccessLog: []
+    )
+
+    mount_endpoints
+    @thread = Thread.new { @server.start }
+    sleep 0.1 until @server.status == :Running
+    self
+  end
+
+  def stop
+    @server&.shutdown
+    @thread&.join(5)
+  end
+
+  def base_url
+    "http://localhost:#{@port}"
+  end
+
+  def buzz_key
+    "test"
+  end
+
+  private
+
+  def find_available_port
+    server = TCPServer.new("127.0.0.1", 0)
+    port = server.addr[1]
+    server.close
+    port
+  end
+
+  def mount_endpoints
+    # Authentication
+    @server.mount_proc "/rest/v2/authenticate" do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body }
+      if req.request_method == "POST"
+        body = JSON.parse(req.body) rescue {}
+        if body["email"] == "user@example.com" && body["password"] == "secret"
+          res["Set-Cookie"] = "test_buzz_cookie=session123; Path=/; HttpOnly"
+          res["Content-Type"] = "application/json"
+          res.body = JSON.generate({ success: true, message: "Authenticated" })
+        else
+          res.status = 401
+          res["Content-Type"] = "application/json"
+          res.body = JSON.generate({ message: "Invalid credentials" })
+        end
+      end
+    end
+
+    # Keep logged in
+    @server.mount_proc "/rest/v2/authenticate/keep_logged_in" do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body }
+      res["Set-Cookie"] = "test_buzz_cookie=longsession456; Path=/; HttpOnly; Max-Age=2592000"
+      res["Content-Type"] = "application/json"
+      res.body = JSON.generate({ success: true })
+    end
+
+    # Advertisers - list
+    @server.mount_proc "/rest/v2/advertisers" do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body, query: req.query_string }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      case req.request_method
+      when "GET"
+        res["Content-Type"] = "application/json"
+        # Support pagination via offset param
+        query = req.query || {}
+        offset = (query["offset"] || "0").to_i
+        if offset == 0
+          res.body = JSON.generate({
+            count: 3,
+            next: "http://localhost:#{@port}/rest/v2/advertisers?offset=2&limit=2",
+            previous: nil,
+            results: [
+              { advertiser_id: 1, advertiser_name: "Acme Corp", active: true },
+              { advertiser_id: 2, advertiser_name: "Widget Inc", active: true }
+            ]
+          })
+        else
+          res.body = JSON.generate({
+            count: 3,
+            next: nil,
+            previous: "http://localhost:#{@port}/rest/v2/advertisers?offset=0&limit=2",
+            results: [
+              { advertiser_id: 3, advertiser_name: "Foo LLC", active: false }
+            ]
+          })
+        end
+      when "POST"
+        res.status = 201
+        res["Content-Type"] = "application/json"
+        body = JSON.parse(req.body) rescue {}
+        res.body = JSON.generate(body.merge("advertiser_id" => 99))
+      end
+    end
+
+    # Advertisers - by ID (needs custom servlet for PUT/DELETE support)
+    handler = proc do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      case req.request_method
+      when "GET"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ advertiser_id: 42, advertiser_name: "Test Advertiser", active: true })
+      when "PUT"
+        res["Content-Type"] = "application/json"
+        body = JSON.parse(req.body) rescue {}
+        res.body = JSON.generate({ advertiser_id: 42 }.merge(body))
+      when "DELETE"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ success: true })
+      end
+    end
+    @server.mount "/rest/v2/advertisers/42", AllMethodsServlet.create(handler)
+
+    # Search
+    @server.mount_proc "/rest/v2/search" do |req, res|
+      @requests << { method: req.request_method, path: req.path, query: req.query_string }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      res["Content-Type"] = "application/json"
+      res.body = JSON.generate({
+        count: 1,
+        results: [{ type: "advertiser", id: 1, name: "Acme Corp" }]
+      })
+    end
+
+    # 404 catch-all
+    @server.mount_proc "/rest/v2/notfound" do |req, res|
+      @requests << { method: req.request_method, path: req.path }
+      res.status = 404
+      res["Content-Type"] = "application/json"
+      res.body = JSON.generate({ message: "Not found" })
+    end
+  end
+end

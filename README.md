@@ -1,0 +1,122 @@
+# Beeswax
+
+Ruby client for the [Beeswax/Freewheel Advertiser API v2](https://docs.freewheel.tv/docs/beeswax-advertiser-api).
+
+## Installation
+
+Add to your Gemfile:
+
+```ruby
+gem "beeswax"
+```
+
+Or install directly:
+
+```
+gem install beeswax
+```
+
+## Quickstart
+
+```ruby
+require "beeswax"
+
+Beeswax.configure do |c|
+  c.buzz_key  = "my-buzz-key"
+  c.email     = "user@example.com"
+  c.password  = "secret"
+end
+
+client = Beeswax::Client.new
+campaigns = client.campaigns.list.to_a
+```
+
+Authentication happens automatically on the first request. You can also pass credentials directly:
+
+```ruby
+client = Beeswax::Client.new(
+  buzz_key: "my-buzz-key",
+  email:    "user@example.com",
+  password: "secret"
+)
+```
+
+## Features
+
+### CRUD Operations
+
+Every resource (`advertisers`, `campaigns`, `line_items`, `creatives`, `segments`, `targeting`, `creative_assets`) supports the same interface:
+
+```ruby
+# Create
+campaign = client.campaigns.create(
+  advertiser_id: 1,
+  campaign_name: "Summer 2026"
+)
+
+# Read
+campaign = client.campaigns.find(42)
+
+# Update
+client.campaigns.update(42, campaign_name: "Fall 2026")
+
+# Delete
+client.campaigns.delete(42)
+```
+
+### Pagination
+
+`list` returns an `Enumerable` paginator that follows next-page links automatically:
+
+```ruby
+# Iterate through all results
+client.line_items.list(advertiser_id: 1).each do |item|
+  puts item["line_item_name"]
+end
+
+# Or page by page
+client.line_items.list.each_page do |page|
+  puts "Got #{page.results.size} results"
+end
+```
+
+### Search
+
+```ruby
+results = client.search(query: "acme", types: [:campaign, :line_item])
+```
+
+### Error Handling
+
+All API errors raise typed exceptions under `Beeswax::Error`:
+
+```ruby
+begin
+  client.campaigns.find(999)
+rescue Beeswax::NotFoundError => e
+  puts e.message
+  puts e.status  # => 404
+rescue Beeswax::RateLimitError => e
+  sleep e.retry_after
+  retry
+rescue Beeswax::ValidationError, Beeswax::AuthenticationError, Beeswax::ServerError => e
+  puts "#{e.class}: #{e.message}"
+end
+```
+
+### Configuration Options
+
+| Option | Default | Description |
+|---|---|---|
+| `buzz_key` | — | Your Beeswax buzz key (required) |
+| `email` | — | Account email (required) |
+| `password` | — | Account password (required) |
+| `account_id` | `nil` | Scope authentication to a specific account |
+| `timezone` | `nil` | Sent as `X-Timezone` header |
+| `keep_logged_in` | `true` | Call keep-logged-in after authenticating |
+| `open_timeout` | `10` | Connection open timeout in seconds |
+| `read_timeout` | `30` | Read timeout in seconds |
+
+## License
+
+MIT
