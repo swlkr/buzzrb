@@ -176,6 +176,16 @@ class TestMockServerIntegration < Minitest::Test
     response = @client.search(query: "acme", types: [:advertiser])
     assert response.success?
     assert_kind_of Hash, response.data
+    # Typed search must return results, not empty hash
+    assert response.data.key?("advertisers"), "Expected 'advertisers' key in search results, got: #{response.data.keys}"
+    refute_empty response.data["advertisers"], "Expected non-empty advertisers results"
+  end
+
+  def test_search_with_multiple_types
+    response = @client.search(query: "test", types: [:advertiser, :campaign])
+    assert response.success?
+    assert response.data.key?("advertisers"), "Expected 'advertisers' key"
+    assert response.data.key?("campaigns"), "Expected 'campaigns' key"
   end
 
   # --- Pagination envelope ---
@@ -224,5 +234,45 @@ class TestMockServerIntegration < Minitest::Test
       @client.get("/rest/v2/test/server-error")
     end
     assert_equal 500, err.status
+  end
+
+  def test_error_body_is_populated
+    @client.authenticate
+    err = assert_raises(Beeswax::ValidationError) do
+      @client.get("/rest/v2/test/bad-request")
+    end
+    assert_kind_of Hash, err.body
+    assert err.body.key?("errors"), "Expected 'errors' key in error body"
+  end
+
+  # --- Lazy auth and re-auth ---
+
+  def test_lazy_auth_on_first_request
+    # Client should auto-authenticate on first request
+    refute @client.authenticated?
+    results = @client.advertisers.list.to_a
+    assert @client.authenticated?
+    refute_empty results
+  end
+
+  # --- Create merges attributes ---
+
+  def test_create_returns_merged_attributes
+    response = @client.post("/rest/v2/advertisers", { name: "Merge Test", active: false, vertical: "Technology" })
+    assert_equal 201, response.status
+    assert_equal "Merge Test", response.data["name"]
+    assert_equal false, response.data["active"]
+    assert_equal "Technology", response.data["vertical"]
+    # Should also have server-generated fields
+    assert response.data.key?("id"), "Expected 'id' in created resource"
+    assert response.data.key?("create_date"), "Expected 'create_date' in created resource"
+  end
+
+  def test_update_returns_merged_attributes
+    result = @client.advertisers.update(1, name: "Merged Update", vertical: "Gaming")
+    assert_equal 1, result["id"]
+    assert_equal "Merged Update", result["name"]
+    assert_equal "Gaming", result["vertical"]
+    assert result.key?("update_date")
   end
 end
