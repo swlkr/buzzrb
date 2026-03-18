@@ -120,6 +120,12 @@ end
 | `open_timeout` | `10` | Connection open timeout in seconds |
 | `read_timeout` | `30` | Read timeout in seconds |
 
+## Testing
+
+```
+bundle exec rake test
+```
+
 ## License
 
 MIT
