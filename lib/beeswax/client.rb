@@ -102,6 +102,14 @@ module Beeswax
       Resources::CreativeAsset.new(self)
     end
 
+    def creative_line_items(line_item_id)
+      Resources::CreativeLineItem.new(self, line_item_id)
+    end
+
+    def reporting
+      Resources::Reporting.new(self)
+    end
+
     def search(query:, types: nil)
       params = { q: query }
       params[:entity_types] = Array(types).map(&:to_s).join(",") if types

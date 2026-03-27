@@ -14,7 +14,9 @@ require_relative "beeswax/resources/creative"
 require_relative "beeswax/resources/segment"
 require_relative "beeswax/resources/targeting"
 require_relative "beeswax/resources/creative_asset"
+require_relative "beeswax/resources/creative_line_item"
 require_relative "beeswax/resources/search"
+require_relative "beeswax/resources/reporting"
 require_relative "beeswax/client"
 
 module Beeswax

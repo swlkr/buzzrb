@@ -82,6 +82,37 @@ client.line_items.list.each_page do |page|
 end
 ```
 
+### Reporting
+
+Query spend, impression, and performance data:
+
+```ruby
+# Query performance data
+rows = client.reporting.query(
+  dimensions: ["campaign", "date"],
+  metrics: ["impressions", "clicks", "spend"]
+)
+rows.each { |r| puts "#{r['campaign_name']}: $#{r['spend']}" }
+```
+
+Manage saved report definitions:
+
+```ruby
+# List saved reports
+client.reporting.list.each { |r| puts r["report_name"] }
+
+# Create a saved report
+client.reporting.create(
+  report_name: "Daily Spend",
+  dimensions: ["campaign", "date"],
+  metrics: ["spend", "impressions"]
+)
+
+# Find / delete
+report = client.reporting.find(1)
+client.reporting.delete(1)
+```
+
 ### Search
 
 ```ruby

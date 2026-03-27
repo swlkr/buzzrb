@@ -185,6 +185,85 @@ class FakeServer
       })
     end
 
+    # Report data
+    @server.mount_proc "/rest/v2/report-data" do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      if req.request_method == "POST"
+        rows = [
+          { "campaign_id" => 1, "campaign_name" => "Summer Campaign", "date" => "2026-03-18",
+            "impressions" => 15000, "clicks" => 450, "spend" => 125.50,
+            "ctr" => 0.03, "cpm" => 8.37, "conversions" => 12, "vcr" => 0.85, "viewability" => 0.72 },
+          { "campaign_id" => 2, "campaign_name" => "Winter Campaign", "date" => "2026-03-18",
+            "impressions" => 22000, "clicks" => 880, "spend" => 210.75,
+            "ctr" => 0.04, "cpm" => 9.58, "conversions" => 28, "vcr" => 0.91, "viewability" => 0.68 }
+        ]
+
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ count: rows.size, results: rows })
+      end
+    end
+
+    # Reports - list
+    @server.mount_proc "/rest/v2/reports" do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body, query: req.query_string }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      case req.request_method
+      when "GET"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({
+          count: 2,
+          next: nil,
+          previous: nil,
+          results: [
+            { report_id: 1, report_name: "Daily Spend", dimensions: ["campaign", "date"], metrics: ["spend", "impressions"] },
+            { report_id: 2, report_name: "Weekly Performance", dimensions: ["line_item"], metrics: ["clicks", "ctr"] }
+          ]
+        })
+      when "POST"
+        res.status = 201
+        res["Content-Type"] = "application/json"
+        body = JSON.parse(req.body) rescue {}
+        res.body = JSON.generate(body.merge("report_id" => 10))
+      end
+    end
+
+    # Reports - by ID
+    report_handler = proc do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      case req.request_method
+      when "GET"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ report_id: 1, report_name: "Daily Spend", dimensions: ["campaign", "date"], metrics: ["spend", "impressions"] })
+      when "DELETE"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ success: true })
+      end
+    end
+    @server.mount "/rest/v2/reports/1", AllMethodsServlet.create(report_handler)
+
     # 404 catch-all
     @server.mount_proc "/rest/v2/notfound" do |req, res|
       @requests << { method: req.request_method, path: req.path }

@@ -188,6 +188,39 @@ class TestMockServerIntegration < Minitest::Test
     assert response.data.key?("campaigns"), "Expected 'campaigns' key"
   end
 
+  # --- Reporting ---
+
+  def test_report_data_query
+    results = @client.reporting.query(
+      dimensions: ["campaign", "date"],
+      metrics: ["impressions", "clicks", "spend"]
+    )
+    assert_kind_of Array, results
+    refute_empty results
+    first = results.first
+    assert first.key?("spend"), "Expected 'spend' key, got: #{first.keys}"
+    assert first.key?("impressions")
+    assert first.key?("campaign_name")
+  end
+
+  def test_list_reports
+    results = @client.reporting.list.to_a
+    assert_kind_of Array, results
+    refute_empty results
+    first = results.first
+    assert first.key?("id") || first.key?("report_id"), "Expected report id key"
+  end
+
+  def test_create_report
+    result = @client.reporting.create(
+      report_name: "Integration Test Report",
+      dimensions: ["campaign"],
+      metrics: ["spend", "impressions"]
+    )
+    assert_kind_of Hash, result
+    assert_equal "Integration Test Report", result["report_name"] || result["name"]
+  end
+
   # --- Pagination envelope ---
 
   def test_pagination_envelope_structure
