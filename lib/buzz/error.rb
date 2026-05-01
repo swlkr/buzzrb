@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Beeswax
+module Buzz
   class Error < StandardError
     attr_reader :status, :body
 

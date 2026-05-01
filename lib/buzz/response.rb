@@ -2,7 +2,7 @@
 
 require "json"
 
-module Beeswax
+module Buzz
   class Response
     attr_reader :status, :headers, :body, :data
 

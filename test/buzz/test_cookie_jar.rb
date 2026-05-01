@@ -4,7 +4,7 @@ require "test_helper"
 
 class TestCookieJar < Minitest::Test
   def setup
-    @jar = Beeswax::CookieJar.new
+    @jar = Buzz::CookieJar.new
     @uri = URI.parse("https://test.api.beeswax.com/rest/v2/authenticate")
   end
 

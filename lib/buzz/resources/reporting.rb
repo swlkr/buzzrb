@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Beeswax
+module Buzz
   module Resources
     class Reporting
       attr_reader :client

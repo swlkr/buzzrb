@@ -1,6 +1,6 @@
-# Beeswax
+# Buzz
 
-Ruby client for the [Beeswax/Freewheel Advertiser API v2](https://docs.freewheel.tv/docs/beeswax-advertiser-api).
+Ruby client for the [Buzz/Freewheel Advertiser API v2](https://docs.freewheel.tv/docs/buzz-advertiser-api).
 
 ## Installation
 
@@ -9,34 +9,34 @@ Requires Ruby 3.0+.
 Add to your Gemfile:
 
 ```ruby
-gem "beeswax"
+gem "buzzrb"
 ```
 
 Or install directly:
 
 ```
-gem install beeswax
+gem install buzzrb
 ```
 
 ## Quickstart
 
 ```ruby
-require "beeswax"
+require "buzz"
 
-Beeswax.configure do |c|
+Buzz.configure do |c|
   c.buzz_key  = "my-buzz-key"
   c.email     = "user@example.com"
   c.password  = "secret"
 end
 
-client = Beeswax::Client.new
+client = Buzz::Client.new
 campaigns = client.campaigns.list.to_a
 ```
 
 Authentication happens automatically on the first request. You can also pass credentials directly:
 
 ```ruby
-client = Beeswax::Client.new(
+client = Buzz::Client.new(
   buzz_key: "my-buzz-key",
   email:    "user@example.com",
   password: "secret"
@@ -121,18 +121,18 @@ results = client.search(query: "acme", types: [:campaign, :line_item])
 
 ### Error Handling
 
-All API errors raise typed exceptions under `Beeswax::Error`:
+All API errors raise typed exceptions under `Buzz::Error`:
 
 ```ruby
 begin
   client.campaigns.find(999)
-rescue Beeswax::NotFoundError => e
+rescue Buzz::NotFoundError => e
   puts e.message
   puts e.status  # => 404
-rescue Beeswax::RateLimitError => e
+rescue Buzz::RateLimitError => e
   sleep e.retry_after
   retry
-rescue Beeswax::ValidationError, Beeswax::AuthenticationError, Beeswax::ServerError => e
+rescue Buzz::ValidationError, Buzz::AuthenticationError, Buzz::ServerError => e
   puts "#{e.class}: #{e.message}"
 end
 ```
@@ -141,7 +141,7 @@ end
 
 | Option | Default | Description |
 |---|---|---|
-| `buzz_key` | — | Your Beeswax buzz key (required) |
+| `buzz_key` | — | Your Buzz buzz key (required) |
 | `email` | — | Account email (required) |
 | `password` | — | Account password (required) |
 | `account_id` | `nil` | Scope authentication to a specific account |

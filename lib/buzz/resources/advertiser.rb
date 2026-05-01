@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-module Beeswax
+module Buzz
   module Resources
-    class Search < Resource
+    class Advertiser < Resource
       private
 
       def resource_path
-        "/rest/v2/search"
+        "/rest/v2/advertisers"
       end
     end
   end

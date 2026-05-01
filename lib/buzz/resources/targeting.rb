@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-module Beeswax
+module Buzz
   module Resources
-    class Segment < Resource
+    class Targeting < Resource
       private
 
       def resource_path
-        "/rest/v2/segments"
+        "/rest/v2/targeting-expressions"
       end
     end
   end

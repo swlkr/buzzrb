@@ -16,10 +16,10 @@ if File.exist?(env_file)
 end
 
 $LOAD_PATH.unshift(File.join(__dir__, "..", "lib"))
-require "beeswax"
+require "buzz"
 require "time"
 
-client = Beeswax::Client.new(
+client = Buzz::Client.new(
   buzz_key: ENV.fetch("BUZZ_KEY"),
   email: ENV.fetch("EMAIL"),
   password: ENV.fetch("PASSWORD")
@@ -135,7 +135,7 @@ begin
     )
     puts "Line item updated with targeting"
     puts JSON.pretty_generate(updated_li)
-  rescue Beeswax::Error => e
+  rescue Buzz::Error => e
     puts "Targeting failed (non-fatal): #{e.message}"
     puts e.body if e.respond_to?(:body)
   end
@@ -146,7 +146,7 @@ begin
   puts "Line item: #{JSON.pretty_generate(client.line_items.find(line_item_id))}"
   puts "Creative: #{JSON.pretty_generate(client.creatives.find(creative_id))}"
 
-rescue Beeswax::Error => e
+rescue Buzz::Error => e
   puts "\nERROR: #{e.class} — #{e.message}"
   puts e.body if e.respond_to?(:body)
 
@@ -160,7 +160,7 @@ ensure
       cli_info = created[:creative_line_item]
       client.creative_line_items(cli_info[:line_item_id]).delete(cli_info[:id])
       puts "Deleted creative-line-item association"
-    rescue Beeswax::Error => e
+    rescue Buzz::Error => e
       puts "Failed to delete creative-line-item: #{e.message}"
     end
   end
@@ -169,7 +169,7 @@ ensure
     begin
       client.targeting.delete(created[:targeting]["id"])
       puts "Deleted targeting expression"
-    rescue Beeswax::Error => e
+    rescue Buzz::Error => e
       puts "Failed to delete targeting: #{e.message}"
     end
   end
@@ -178,7 +178,7 @@ ensure
     begin
       client.creatives.delete(created[:creative]["id"])
       puts "Deleted creative"
-    rescue Beeswax::Error => e
+    rescue Buzz::Error => e
       puts "Failed to delete creative: #{e.message}"
     end
   end
@@ -187,7 +187,7 @@ ensure
     begin
       client.line_items.delete(created[:line_item]["id"])
       puts "Deleted line item"
-    rescue Beeswax::Error => e
+    rescue Buzz::Error => e
       puts "Failed to delete line item: #{e.message}"
     end
   end
@@ -196,7 +196,7 @@ ensure
     begin
       client.campaigns.delete(created[:campaign]["id"])
       puts "Deleted campaign"
-    rescue Beeswax::Error => e
+    rescue Buzz::Error => e
       puts "Failed to delete campaign: #{e.message}"
     end
   end

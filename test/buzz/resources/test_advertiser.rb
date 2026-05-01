@@ -7,7 +7,7 @@ class TestAdvertiserResource < Minitest::Test
 
   def setup
     @server = FakeServer.new.start
-    @client = Beeswax::Client.new(
+    @client = Buzz::Client.new(
       buzz_key: @server.buzz_key,
       email: "user@example.com",
       password: "secret"
@@ -21,7 +21,7 @@ class TestAdvertiserResource < Minitest::Test
 
   def test_list
     paginator = @client.advertisers.list
-    assert_kind_of Beeswax::Paginator, paginator
+    assert_kind_of Buzz::Paginator, paginator
     items = paginator.to_a
     assert_equal 3, items.length
   end

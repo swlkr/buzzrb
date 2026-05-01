@@ -7,7 +7,7 @@ class TestClient < Minitest::Test
 
   def setup
     @server = FakeServer.new.start
-    @client = Beeswax::Client.new(
+    @client = Buzz::Client.new(
       buzz_key: @server.buzz_key,
       email: "user@example.com",
       password: "secret",
@@ -27,14 +27,14 @@ class TestClient < Minitest::Test
   end
 
   def test_authentication_failure
-    client = Beeswax::Client.new(
+    client = Buzz::Client.new(
       buzz_key: @server.buzz_key,
       email: "wrong@example.com",
       password: "wrong"
     )
     override_base_url(client, @server.base_url)
 
-    assert_raises(Beeswax::AuthenticationError) { client.authenticate }
+    assert_raises(Buzz::AuthenticationError) { client.authenticate }
   end
 
   def test_lazy_authentication
@@ -80,7 +80,7 @@ class TestClient < Minitest::Test
   end
 
   def test_not_found_raises
-    assert_raises(Beeswax::NotFoundError) do
+    assert_raises(Buzz::NotFoundError) do
       @client.get("/rest/v2/notfound")
     end
   end

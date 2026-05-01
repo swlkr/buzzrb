@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Beeswax
+module Buzz
   module Resources
     class CreativeLineItem
       attr_reader :client, :line_item_id

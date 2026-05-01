@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift File.expand_path("../../lib", __dir__)
-require "beeswax"
+require "buzz"
 require "minitest/autorun"
 
-# Integration tests against the Python mock Beeswax server.
+# Integration tests against the Python mock Buzz server.
 # Requires: python3 server.py running on localhost:8550
 #
-# Run: BEESWAX_MOCK=1 bundle exec ruby test/integration/test_mock_server.rb
+# Run: BUZZ_MOCK=1 bundle exec ruby test/integration/test_mock_server.rb
 
-MOCK_URL = ENV.fetch("BEESWAX_MOCK_URL", "http://localhost:8550")
+MOCK_URL = ENV.fetch("BUZZ_MOCK_URL", "http://localhost:8550")
 
 class TestMockServerIntegration < Minitest::Test
   def setup
-    skip "Set BEESWAX_MOCK=1 to run integration tests" unless ENV["BEESWAX_MOCK"]
-    @client = Beeswax::Client.new(
+    skip "Set BUZZ_MOCK=1 to run integration tests" unless ENV["BUZZ_MOCK"]
+    @client = Buzz::Client.new(
       buzz_key: "test",
       email: "user@example.com",
       password: "secret",
@@ -237,7 +237,7 @@ class TestMockServerIntegration < Minitest::Test
 
   def test_400_raises_validation_error
     @client.authenticate
-    err = assert_raises(Beeswax::ValidationError) do
+    err = assert_raises(Buzz::ValidationError) do
       @client.get("/rest/v2/test/bad-request")
     end
     assert_equal 400, err.status
@@ -246,7 +246,7 @@ class TestMockServerIntegration < Minitest::Test
 
   def test_404_raises_not_found_error
     @client.authenticate
-    err = assert_raises(Beeswax::NotFoundError) do
+    err = assert_raises(Buzz::NotFoundError) do
       @client.get("/rest/v2/test/not-found")
     end
     assert_equal 404, err.status
@@ -254,7 +254,7 @@ class TestMockServerIntegration < Minitest::Test
 
   def test_429_raises_rate_limit_error
     @client.authenticate
-    err = assert_raises(Beeswax::RateLimitError) do
+    err = assert_raises(Buzz::RateLimitError) do
       @client.get("/rest/v2/test/rate-limit")
     end
     assert_equal 429, err.status
@@ -263,7 +263,7 @@ class TestMockServerIntegration < Minitest::Test
 
   def test_500_raises_server_error
     @client.authenticate
-    err = assert_raises(Beeswax::ServerError) do
+    err = assert_raises(Buzz::ServerError) do
       @client.get("/rest/v2/test/server-error")
     end
     assert_equal 500, err.status
@@ -271,7 +271,7 @@ class TestMockServerIntegration < Minitest::Test
 
   def test_error_body_is_populated
     @client.authenticate
-    err = assert_raises(Beeswax::ValidationError) do
+    err = assert_raises(Buzz::ValidationError) do
       @client.get("/rest/v2/test/bad-request")
     end
     assert_kind_of Hash, err.body

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Beeswax
+module Buzz
   class Paginator
     include Enumerable
 

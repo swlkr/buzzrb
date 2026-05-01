@@ -3,7 +3,7 @@
 require "uri"
 require "time"
 
-module Beeswax
+module Buzz
   class CookieJar
     Cookie = Struct.new(:name, :value, :domain, :path, :expires, :secure, :httponly, keyword_init: true)
 

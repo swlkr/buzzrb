@@ -4,7 +4,7 @@ require "net/http"
 require "uri"
 require "json"
 
-module Beeswax
+module Buzz
   class Client
     attr_reader :config, :cookie_jar
 
@@ -17,7 +17,7 @@ module Beeswax
           options.each { |k, v| c.public_send(:"#{k}=", v) }
         end
       else
-        Beeswax.configuration.dup
+        Buzz.configuration.dup
       end
       @config.validate!
       @cookie_jar = CookieJar.new
