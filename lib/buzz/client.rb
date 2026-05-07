@@ -20,6 +20,7 @@ module Buzz
       else
         Buzz.configuration.dup
       end
+
       @config.validate!
       @cookie_jar = CookieJar.new
       @http = nil
@@ -45,7 +46,7 @@ module Buzz
 
     def authenticate
       uri = build_uri("/rest/v2/authenticate")
-      body = { email: config.email, password: config.password }
+      body = {email: config.email, password: config.password}
       body[:account_id] = config.account_id if config.account_id
 
       req = build_request(:post, uri)
@@ -55,10 +56,12 @@ module Buzz
       response = execute(uri, req)
 
       unless response.success?
-        raise AuthenticationError.new(
-          "Authentication failed: #{response.body}",
-          status: response.status,
-          body: response.data
+        raise(
+          AuthenticationError.new(
+            "Authentication failed: #{response.body}",
+            status: response.status,
+            body: response.data
+          )
         )
       end
 
@@ -113,7 +116,7 @@ module Buzz
     end
 
     def search(query:, types: nil)
-      params = { q: query }
+      params = {q: query}
       params[:entity_types] = Array(types).map(&:to_s).join(",") if types
       get("/rest/v2/search", params)
     end
@@ -150,7 +153,7 @@ module Buzz
         authenticate
         uri = build_uri(path, params)
         req = build_request(method, uri)
-        
+
         if body
           if multipart?(body)
             req.set_form(format_multipart(body), "multipart/form-data")
@@ -159,7 +162,7 @@ module Buzz
             req.body = JSON.generate(body)
           end
         end
-        
+
         response = execute(uri, req)
       end
 
@@ -177,16 +180,21 @@ module Buzz
         query = params.map { |k, v| "#{URI.encode_www_form_component(k)}=#{URI.encode_www_form_component(v)}" }
         uri.query = query.join("&")
       end
+
       uri
     end
 
     def build_request(method, uri)
       klass = case method
-              when :get    then Net::HTTP::Get
-              when :post   then Net::HTTP::Post
-              when :put    then Net::HTTP::Put
-              when :delete then Net::HTTP::Delete
-              end
+      when :get
+        Net::HTTP::Get
+      when :post
+        Net::HTTP::Post
+      when :put
+        Net::HTTP::Put
+      when :delete
+        Net::HTTP::Delete
+      end
 
       req = klass.new(uri)
       req["Accept"] = "application/json"
@@ -222,6 +230,7 @@ module Buzz
           @http.keep_alive_timeout = 30
           @http.start
         end
+
         @http
       end
     end

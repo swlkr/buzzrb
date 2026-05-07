@@ -2,8 +2,16 @@
 
 module Buzz
   class Configuration
-    attr_accessor :buzz_key, :email, :password, :keep_logged_in,
-                  :account_id, :timezone, :open_timeout, :read_timeout
+    attr_accessor(
+      :buzz_key,
+      :email,
+      :password,
+      :keep_logged_in,
+      :account_id,
+      :timezone,
+      :open_timeout,
+      :read_timeout
+    )
     attr_writer :base_url
 
     def initialize

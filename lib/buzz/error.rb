@@ -11,7 +11,9 @@ module Buzz
     end
   end
 
-  class AuthenticationError < Error; end
+  class AuthenticationError < Error
+  end
+
   class RateLimitError < Error
     attr_reader :retry_after
 
@@ -20,7 +22,13 @@ module Buzz
       super(message, status: status, body: body)
     end
   end
-  class NotFoundError < Error; end
-  class ValidationError < Error; end
-  class ServerError < Error; end
+
+  class NotFoundError < Error
+  end
+
+  class ValidationError < Error
+  end
+
+  class ServerError < Error
+  end
 end

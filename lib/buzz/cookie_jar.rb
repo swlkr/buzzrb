@@ -68,7 +68,7 @@ module Buzz
       value = name_value[(eq_index + 1)..].strip
       return nil if name.empty?
 
-      attrs = { name: name, value: value, domain: uri.host, path: "/", secure: false, httponly: false }
+      attrs = {name: name, value: value, domain: uri.host, path: "/", secure: false, httponly: false}
 
       parts.each do |part|
         key, val = part.split("=", 2).map(&:strip)

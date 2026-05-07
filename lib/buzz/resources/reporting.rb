@@ -11,7 +11,7 @@ module Buzz
 
       # Query performance data (spend, impressions, clicks, etc.)
       def query(dimensions: [], metrics: [], **params)
-        body = { dimensions: dimensions, metrics: metrics }.merge(params)
+        body = {dimensions: dimensions, metrics: metrics}.merge(params)
         response = client.post("/rest/v2/report-data", body)
         response.data["results"]
       end
