@@ -185,6 +185,51 @@ class FakeServer
       })
     end
 
+    # Advertiser Categories - list
+    @server.mount_proc "/rest/v2/ref/advertiser-categories" do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body, query: req.query_string }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      case req.request_method
+      when "GET"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({
+          count: 2,
+          next: nil,
+          previous: nil,
+          results: [
+            { key: "auto", name: "Automotive" },
+            { key: "tech", name: "Technology" }
+          ]
+        })
+      end
+    end
+
+    # Advertiser Categories - find
+    category_handler = proc do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      case req.request_method
+      when "GET"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ key: "auto", name: "Automotive" })
+      end
+    end
+    @server.mount "/rest/v2/ref/advertiser-categories/auto", AllMethodsServlet.create(category_handler)
+
     # Report data
     @server.mount_proc "/rest/v2/report-data" do |req, res|
       @requests << { method: req.request_method, path: req.path, body: req.body }

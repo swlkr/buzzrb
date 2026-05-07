@@ -83,6 +83,10 @@ module Buzz
       Resources::Advertiser.new(self)
     end
 
+    def advertiser_categories
+      Resources::AdvertiserCategory.new(self)
+    end
+
     def campaigns
       Resources::Campaign.new(self)
     end
