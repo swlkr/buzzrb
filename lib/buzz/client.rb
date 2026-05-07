@@ -3,6 +3,7 @@
 require "net/http"
 require "uri"
 require "json"
+require "tempfile"
 
 module Buzz
   class Client
@@ -48,6 +49,7 @@ module Buzz
       body[:account_id] = config.account_id if config.account_id
 
       req = build_request(:post, uri)
+      req["Content-Type"] = "application/json"
       req.body = JSON.generate(body)
 
       response = execute(uri, req)
@@ -121,6 +123,7 @@ module Buzz
     def keep_logged_in
       uri = build_uri("/rest/v2/authenticate/keep_logged_in")
       req = build_request(:post, uri)
+      req["Content-Type"] = "application/json"
       req.body = JSON.generate({})
       execute(uri, req)
     end
@@ -130,7 +133,15 @@ module Buzz
 
       uri = build_uri(path, params)
       req = build_request(method, uri)
-      req.body = JSON.generate(body) if body
+
+      if body
+        if multipart?(body)
+          req.set_form(format_multipart(body), "multipart/form-data")
+        else
+          req["Content-Type"] = "application/json"
+          req.body = JSON.generate(body)
+        end
+      end
 
       response = execute(uri, req)
 
@@ -139,7 +150,16 @@ module Buzz
         authenticate
         uri = build_uri(path, params)
         req = build_request(method, uri)
-        req.body = JSON.generate(body) if body
+        
+        if body
+          if multipart?(body)
+            req.set_form(format_multipart(body), "multipart/form-data")
+          else
+            req["Content-Type"] = "application/json"
+            req.body = JSON.generate(body)
+          end
+        end
+        
         response = execute(uri, req)
       end
 
@@ -169,7 +189,6 @@ module Buzz
               end
 
       req = klass.new(uri)
-      req["Content-Type"] = "application/json"
       req["Accept"] = "application/json"
       req["X-Timezone"] = config.timezone if config.timezone
 
@@ -224,6 +243,28 @@ module Buzz
         raise ServerError.new(error_message(response), status: response.status, body: response.data)
       else
         raise Error.new(error_message(response), status: response.status, body: response.data)
+      end
+    end
+
+    def multipart?(body)
+      return false unless body.is_a?(Hash) || body.is_a?(Array)
+
+      if body.is_a?(Hash)
+        body.values.any? { |v| v.is_a?(IO) || (defined?(Tempfile) && v.is_a?(Tempfile)) }
+      else
+        body.any? { |v| v.is_a?(IO) || (defined?(Tempfile) && v.is_a?(Tempfile)) }
+      end
+    end
+
+    def format_multipart(body)
+      return body unless body.is_a?(Hash)
+
+      body.map do |k, v|
+        if v.is_a?(IO) || (defined?(Tempfile) && v.is_a?(Tempfile))
+          [k.to_s, v]
+        else
+          [k.to_s, v.to_s]
+        end
       end
     end
 

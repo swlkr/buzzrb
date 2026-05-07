@@ -53,14 +53,14 @@ Every resource (`advertisers`, `campaigns`, `line_items`, `creatives`, `segments
 # Create
 campaign = client.campaigns.create(
   advertiser_id: 1,
-  campaign_name: "Summer 2026"
+  name: "Summer 2026"
 )
 
 # Read
 campaign = client.campaigns.find(42)
 
 # Update
-client.campaigns.update(42, campaign_name: "Fall 2026")
+client.campaigns.update(42, name: "Fall 2026")
 
 # Delete
 client.campaigns.delete(42)

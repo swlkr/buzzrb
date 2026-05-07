@@ -264,6 +264,39 @@ class FakeServer
     end
     @server.mount "/rest/v2/reports/1", AllMethodsServlet.create(report_handler)
 
+    # Creative Assets - multipart upload
+    @server.mount_proc "/rest/v2/creative-assets" do |req, res|
+      @requests << {
+        method: req.request_method,
+        path: req.path,
+        content_type: req["Content-Type"],
+        body: req.body,
+        query: req.query_string
+      }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      if req.request_method == "POST"
+        res.status = 201
+        res["Content-Type"] = "application/json"
+        
+        # In a real multipart request, WEBrick parses req.query
+        # but for this mock we just want to confirm it was sent as multipart
+        if req["Content-Type"] =~ /multipart\/form-data/
+          res.body = JSON.generate({ creative_asset_id: 123, status: "uploaded" })
+        else
+          # Fallback for JSON
+          body = JSON.parse(req.body) rescue {}
+          res.body = JSON.generate(body.merge("creative_asset_id" => 123))
+        end
+      end
+    end
+
     # 404 catch-all
     @server.mount_proc "/rest/v2/notfound" do |req, res|
       @requests << { method: req.request_method, path: req.path }
