@@ -5,9 +5,9 @@ require_relative "lib/buzz/version"
 Gem::Specification.new do |spec|
   spec.name    = "buzzrb"
   spec.version = Buzz::VERSION
-  spec.authors = ["Letterpress"]
+  spec.authors = ["swlkr"]
   spec.summary = "Ruby client for the Buzz/Freewheel Advertiser API v2.0"
-  spec.homepage = "https://github.com/getletterpress/buzzrb"
+  spec.homepage = "https://github.com/swlkr/buzzrb"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.0"
 
