@@ -47,7 +47,7 @@ client = Buzz::Client.new(
 
 ### CRUD Operations
 
-Every resource (`advertisers`, `campaigns`, `line_items`, `creatives`, `segments`, `targeting`, `creative_assets`) supports the same interface:
+Every resource (`advertisers`, `campaigns`, `line_items`, `creatives`, `creative_templates`, `segments`, `targeting`, `creative_assets`) supports the same interface:
 
 ```ruby
 # Create

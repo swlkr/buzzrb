@@ -342,6 +342,31 @@ class FakeServer
       end
     end
 
+    # Creative Templates - list
+    @server.mount_proc "/rest/creative_template" do |req, res|
+      @requests << { method: req.request_method, path: req.path, body: req.body, query: req.query_string }
+
+      unless req["Cookie"]&.include?("test_buzz_cookie")
+        res.status = 401
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({ message: "Not authenticated" })
+        next
+      end
+
+      case req.request_method
+      when "GET"
+        res["Content-Type"] = "application/json"
+        res.body = JSON.generate({
+          count: 1,
+          next: nil,
+          previous: nil,
+          results: [
+            { creative_template_id: 1, creative_template_name: "JPEG Banner" }
+          ]
+        })
+      end
+    end
+
     # 404 catch-all
     @server.mount_proc "/rest/v2/notfound" do |req, res|
       @requests << { method: req.request_method, path: req.path }

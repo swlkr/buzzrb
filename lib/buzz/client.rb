@@ -99,6 +99,10 @@ module Buzz
       Resources::Creative.new(self)
     end
 
+    def creative_templates
+      Resources::CreativeTemplate.new(self)
+    end
+
     def segments
       Resources::Segment.new(self)
     end
